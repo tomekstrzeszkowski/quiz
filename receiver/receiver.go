@@ -11,6 +11,7 @@ import (
 
 	sdr "example.com/voting/sender"
 	"example.com/voting/utils"
+	"github.com/libp2p/go-libp2p/core/event"
 	"github.com/libp2p/go-libp2p/core/host"
 	"github.com/libp2p/go-libp2p/core/network"
 	"github.com/libp2p/go-libp2p/core/peer"
@@ -124,13 +125,39 @@ func (r *Receiver) handleKeyboardInput(ctx context.Context, programmaticInput <-
 		}
 	}
 }
+func (r *Receiver) HandleConnectedPeers(host host.Host) {
+	subscription, err := host.EventBus().Subscribe(new(event.EvtPeerConnectednessChanged))
+	if err != nil {
+		log.Fatal(err)
+	}
+	go func() {
+		defer subscription.Close()
+		for {
+			select {
+			case evt := <-subscription.Out():
+				connectEvent := evt.(event.EvtPeerConnectednessChanged)
+				switch connectEvent.Connectedness {
+				case network.Connected:
+					//fmt.Printf("Peer connected: %s\n", connectEvent.Peer)
+				case network.NotConnected:
+					for i, sender := range r.Senders {
+						if sender.ID == connectEvent.Peer {
+							fmt.Printf("Peer disconnected: %s (%s)\n", sender.Nick, connectEvent.Peer)
+							r.Senders = append(r.Senders[:i], r.Senders[i+1:]...)
+						}
+					}
+				}
+			}
+		}
+	}()
+}
 func (r *Receiver) HandleKeyboard(ctx context.Context, inputChan chan bool) {
 	go r.handleKeyboardInput(ctx, inputChan)
 }
-func (r *Receiver) StartListening(ctx context.Context, ha host.Host, inputChan chan bool) {
-	fullAddr := utils.GetHostAddress(ha)
+func (r *Receiver) StartListening(ctx context.Context, host host.Host, inputChan chan bool) {
+	fullAddr := utils.GetHostAddress(host)
 	log.Printf("I am %s\n", fullAddr)
-	ha.SetStreamHandler("/step/1.0.0", func(s network.Stream) {
+	host.SetStreamHandler("/step/1.0.0", func(s network.Stream) {
 		remotePeerID := s.Conn().RemotePeer()
 		sender := r.FindSender(remotePeerID)
 		if sender == nil {
@@ -146,7 +173,7 @@ func (r *Receiver) StartListening(ctx context.Context, ha host.Host, inputChan c
 		}
 		sender.SendStep(s, r)
 	})
-	ha.SetStreamHandler("/voting/1.0.0", func(s network.Stream) {
+	host.SetStreamHandler("/voting/1.0.0", func(s network.Stream) {
 		sender := r.FindSender(s.Conn().RemotePeer())
 		vote, _ := r.read(s)
 		voteValue, _ := strconv.Atoi(strings.ReplaceAll(vote, "\n", ""))
@@ -166,7 +193,7 @@ func (r *Receiver) StartListening(ctx context.Context, ha host.Host, inputChan c
 			log.Println(r.GetSummary())
 		}
 	})
-	ha.SetStreamHandler("/name/1.0.0", func(s network.Stream) {
+	host.SetStreamHandler("/name/1.0.0", func(s network.Stream) {
 		remotePeerID := s.Conn().RemotePeer()
 		nick, err := r.read(s)
 		nick = strings.ReplaceAll(nick, "\n", "")
@@ -181,12 +208,12 @@ func (r *Receiver) StartListening(ctx context.Context, ha host.Host, inputChan c
 			sender.SendStep(s, r)
 		}
 	})
-	ha.SetStreamHandler("/question/1.0.0", func(s network.Stream) {
+	host.SetStreamHandler("/question/1.0.0", func(s network.Stream) {
 		remotePeerID := s.Conn().RemotePeer()
 		sender := r.FindSender(remotePeerID)
 		sender.SendQuestion(s, r)
 	})
-	ha.SetStreamHandler("/summary/1.0.0", func(s network.Stream) {
+	host.SetStreamHandler("/summary/1.0.0", func(s network.Stream) {
 		remotePeerID := s.Conn().RemotePeer()
 		sender := r.FindSender(remotePeerID)
 		sender.SendSummary(s, r, r.GetSummary())

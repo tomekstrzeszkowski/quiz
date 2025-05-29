@@ -11,8 +11,6 @@ import (
 	sdr "example.com/voting/sender"
 	"example.com/voting/utils"
 	golog "github.com/ipfs/go-log/v2"
-	"github.com/libp2p/go-libp2p/core/event"
-	"github.com/libp2p/go-libp2p/core/network"
 )
 
 func main() {
@@ -38,30 +36,7 @@ func main() {
 	if *listenF == 10000 {
 		receiver.StartListening(ctx, host, inputChan)
 		receiver.HandleKeyboard(ctx, inputChan)
-		subscription, err := host.EventBus().Subscribe(new(event.EvtPeerConnectednessChanged))
-		if err != nil {
-			log.Fatal(err)
-		}
-		go func() {
-			defer subscription.Close()
-			for {
-				select {
-				case evt := <-subscription.Out():
-					connectEvent := evt.(event.EvtPeerConnectednessChanged)
-					switch connectEvent.Connectedness {
-					case network.Connected:
-						//fmt.Printf("Peer connected: %s\n", connectEvent.Peer)
-					case network.NotConnected:
-						for i, sender := range receiver.Senders {
-							if sender.ID == connectEvent.Peer {
-								fmt.Printf("Peer disconnected: %s (%s)\n", sender.Nick, connectEvent.Peer)
-								receiver.Senders = append(receiver.Senders[:i], receiver.Senders[i+1:]...)
-							}
-						}
-					}
-				}
-			}
-		}()
+		receiver.HandleConnectedPeers(host)
 	}
 	peerChan := utils.InitMDNS(host, "tstrz-voting-p2p-app-v1.0.0")
 	for {
