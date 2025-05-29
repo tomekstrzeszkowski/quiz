@@ -7,9 +7,9 @@ import (
 	"log"
 	"time"
 
-	"example.com/voting/receiver"
-	sdr "example.com/voting/sender"
-	"example.com/voting/utils"
+	"example.com/quiz/receiver"
+	sdr "example.com/quiz/sender"
+	"example.com/quiz/utils"
 	golog "github.com/ipfs/go-log/v2"
 )
 

@@ -1,4 +1,4 @@
-module example.com/voting
+module example.com/quiz
 
 go 1.23.8
 

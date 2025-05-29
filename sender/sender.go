@@ -6,7 +6,7 @@ import (
 	"log"
 	"strconv"
 
-	"example.com/voting/utils"
+	"example.com/quiz/utils"
 	"github.com/libp2p/go-libp2p/core/host"
 	"github.com/libp2p/go-libp2p/core/network"
 	"github.com/libp2p/go-libp2p/core/peer"

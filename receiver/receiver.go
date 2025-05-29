@@ -9,8 +9,8 @@ import (
 	"strconv"
 	"strings"
 
-	sdr "example.com/voting/sender"
-	"example.com/voting/utils"
+	sdr "example.com/quiz/sender"
+	"example.com/quiz/utils"
 	"github.com/libp2p/go-libp2p/core/event"
 	"github.com/libp2p/go-libp2p/core/host"
 	"github.com/libp2p/go-libp2p/core/network"
@@ -220,5 +220,5 @@ func (r *Receiver) StartListening(ctx context.Context, host host.Host, inputChan
 		sender.Step = utils.WaitForVoting
 	})
 	log.Println("listening for connections")
-	log.Printf("Now run \"./voting -l 10001\"")
+	log.Printf("Now run \"./quiz -l 10001\"")
 }

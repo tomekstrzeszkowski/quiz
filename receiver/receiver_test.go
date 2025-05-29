@@ -3,8 +3,8 @@ package receiver
 import (
 	"testing"
 
-	sdr "example.com/voting/sender"
-	"example.com/voting/utils"
+	sdr "example.com/quiz/sender"
+	"example.com/quiz/utils"
 )
 
 func TestAddingSender(t *testing.T) {
