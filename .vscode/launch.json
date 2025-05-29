@@ -4,18 +4,20 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [{
-        "name": "Listen",
+        "name": "Receiver",
         "type": "go",
         "request": "launch",
         "mode": "debug",
         "program": "${file}",
-        "args": ["-l", "10000"]
+        "args": ["-l", "10000"],
+        "console": "integratedTerminal"
     },{
-        "name": "Connect",
+        "name": "Sender1",
         "type": "go",
         "request": "launch",
         "mode": "auto",
         "program": "${workspaceRoot}",
-        "args": ["-l", "10001", "-d", "/ip4/127.0.0.1/tcp/10000/p2p/<connection-id-goes-here>"]
+        "args": ["-l", "10001"],
+        "console": "integratedTerminal"
     }]
 }
